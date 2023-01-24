@@ -1,7 +1,5 @@
 package io.github.nefilim.mill.semver
 
-import scala.jdk.CollectionConverters.CollectionHasAsScala
-
 object GitHubActions {
   def githubActionsBuild(): Boolean = Option(System.getenv("GITHUB_ACTIONS")).contains("true")
 
