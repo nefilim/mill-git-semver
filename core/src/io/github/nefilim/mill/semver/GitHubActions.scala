@@ -1,5 +1,7 @@
 package io.github.nefilim.mill.semver
 
+import scala.jdk.CollectionConverters.CollectionHasAsScala
+
 object GitHubActions {
   def githubActionsBuild(): Boolean = Option(System.getenv("GITHUB_ACTIONS")).contains("true")
 
@@ -9,8 +11,12 @@ object GitHubActions {
 }
 
 object Jenkins {
-  def jenkinsBuild(): Boolean =
-    Option(System.getenv("JENKINS_URL")).isDefined && Option(System.getenv("BUILD_ID")).isDefined
+  def jenkinsBuild(): Boolean = {
+    println(System.getenv())
+    println(System.getenv().keySet().asScala.toList.sorted.mkString("\n"))
+    println(System.getenv().keySet().size)
+     Option(System.getenv("JENKINS_URL")).isDefined && Option(System.getenv("BUILD_ID")).isDefined
+  }
 
   def jenkinsBranchShortName(): Option[String] = Option(System.getenv("BRANCH_NAME"))
 }

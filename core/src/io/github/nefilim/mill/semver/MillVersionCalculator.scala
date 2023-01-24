@@ -27,6 +27,9 @@ trait MillVersionCalculator extends Module {
       val calculator = VersionCalculator.getTargetBranchVersionCalculator(ops, config, currentBranch)
       calculator.calculateVersion() match {
         case Left(e) =>
+          e match {
+            case VersionCalculatorError.Git(t) => t.printStackTrace()
+          }
           throw new Exception(s"failed to calculate version: $e")
         case Right(v) =>
           v
