@@ -23,12 +23,13 @@ trait MillVersionCalculator extends Module {
     val config = VersionCalculatorConfig(VersionCalculatorConfig.flowVersionCalculatorStrategy())
     val ops = GitContextProvider.gitContextProviderOperations(git, config)
     // TODO add override version support
-    logger.info("checking for current branch")
     ops.currentBranch().map { currentBranch =>
-      println(s"current brnach: $currentBranch")
       val calculator = VersionCalculator.getTargetBranchVersionCalculator(ops, config, currentBranch)
       calculator.calculateVersion() match {
         case Left(e) =>
+          e match {
+            case VersionCalculatorError.Git(t) => t.printStackTrace()
+          }
           throw new Exception(s"failed to calculate version: $e")
         case Right(v) =>
           v

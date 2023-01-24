@@ -77,12 +77,18 @@ object GitContextProvider {
   }
 
   private[semver] def currentBranchRef(git: Git): Option[String] = {
-    if (githubActionsBuild() && pullRequestEvent()) {
+    if (Jenkins.jenkinsBuild()) {
+      println("Found Jenkins CI environment")
+      Jenkins.jenkinsBranchShortName()
+    } else if (githubActionsBuild() && pullRequestEvent()) {
+      println("Found GitHub Actions CI environment")
       pullRequestHeadRef().map { r =>
         s"${GitRef.RemoteOrigin}/$r"
       } // why does GITHUB_HEAD_REF not refer to a ref like GITHUB_REF???
-    } else
+    } else {
+      println("No CI environment found, using full branch")
       Option(git.getRepository.getFullBranch)
+    }
   }
   
   private[semver] def shortName(name: Option[String]): Either[VersionCalculatorError, String] = {
@@ -97,8 +103,9 @@ object GitContextProvider {
           case Success(v) => Right(v)
           case Failure(e) => Left(VersionCalculatorError.Git(e))
         }
+      case Some(n) => Right(n)
       case _ => Left(VersionCalculatorError.Unexpected("unable to parse branch Ref: [$it]"))
-    } 
+    }
   }
   
   private[semver] def gitCommitsSinceBranchPoint(
@@ -160,14 +167,20 @@ object GitContextProvider {
   }
   
   private[semver] def headRevInBranch(git: Git, branch: GitRef.Branch): Either[VersionCalculatorError, RevCommit] = {
-    Using(new RevWalk(git.getRepository)) { walk =>
-      val revCommit = walk.parseCommit(git.getRepository.findRef(branch.refName).getObjectId)
-      walk.dispose()
-      revCommit
-    } match {
-      case Success(v) => Right(v)
-      case Failure(e) => Left(VersionCalculatorError.Git(e))
-    }
+    if (git.getRepository.findRef(branch.refName) == null) { // probably in detached head state in jenkins
+      Try(git.log().setMaxCount(1).call().asScala.head) match {
+        case Success(v) => Right(v)
+        case Failure(e) => Left(VersionCalculatorError.Git(e))
+      }
+    } else
+      Using(new RevWalk(git.getRepository)) { walk =>
+        val revCommit = walk.parseCommit(git.getRepository.findRef(branch.refName).getObjectId)
+        walk.dispose()
+        revCommit
+      } match {
+        case Success(v) => Right(v)
+        case Failure(e) => Left(VersionCalculatorError.Git(e))
+      }
   }
 
   private[semver] def findYoungestTagOnBranchOlderThanTarget(
