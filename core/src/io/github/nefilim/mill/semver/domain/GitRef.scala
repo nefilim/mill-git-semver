@@ -1,4 +1,4 @@
-package org.nefilim.mill.semver.domain
+package io.github.nefilim.mill.semver.domain
 
 import org.eclipse.jgit.lib.{Constants, ObjectId, Repository}
 

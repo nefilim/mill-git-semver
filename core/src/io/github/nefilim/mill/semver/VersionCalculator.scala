@@ -1,10 +1,11 @@
-package org.nefilim.mill.semver
+package io.github.nefilim.mill.semver
 
+import io.github.nefilim.mill.semver.domain.GitRef.Branch
 import just.semver.{ParseError, SemVer}
 import mill.api.Logger
-import org.nefilim.mill.semver.VersionCalculatorConfig.{VersionCalculatorStrategy, VersionModifier, VersionQualifier, increasePatch}
-import org.nefilim.mill.semver.domain.GitRef
-import org.nefilim.mill.semver.domain.Version.{BuildMetadataLabel, PreReleaseLabel}
+import io.github.nefilim.mill.semver.VersionCalculatorConfig.{VersionCalculatorStrategy, VersionModifier, VersionQualifier, increasePatch}
+import io.github.nefilim.mill.semver.domain.GitRef
+import io.github.nefilim.mill.semver.domain.Version.{BuildMetadataLabel, PreReleaseLabel}
 
 import scala.util.matching.Regex
 
@@ -112,7 +113,7 @@ case class VersionCalculatorConfig(
 }
 object VersionCalculatorConfig {
   type VersionModifier = SemVer => SemVer
-  type VersionQualifier = (ContextProviderOperations, GitRef.Branch) => (PreReleaseLabel, BuildMetadataLabel)
+  type VersionQualifier = (ContextProviderOperations, Branch) => (PreReleaseLabel, BuildMetadataLabel)
   type VersionCalculatorStrategy = List[BranchMatchingConfiguration]
 
   val DefaultVersion = SemVer(SemVer.major0, SemVer.Minor(1), SemVer.patch0, None, None)

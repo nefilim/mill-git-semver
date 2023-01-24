@@ -1,0 +1,5 @@
+out/
+.bsp/
+.idea/
+.mill-bin/
+.env

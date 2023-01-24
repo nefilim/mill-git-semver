@@ -1,4 +1,4 @@
-package org.nefilim.mill.semver
+package io.github.nefilim.mill.semver
 
 import just.semver.SemVer
 import mill.api.Logger
@@ -6,8 +6,8 @@ import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.lib.{ObjectId, Ref}
 import org.eclipse.jgit.revwalk.{RevCommit, RevWalk}
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
-import org.nefilim.mill.semver.GitHubActions.{githubActionsBuild, pullRequestEvent, pullRequestHeadRef}
-import org.nefilim.mill.semver.domain.GitRef
+import io.github.nefilim.mill.semver.GitHubActions.{githubActionsBuild, pullRequestEvent, pullRequestHeadRef}
+import io.github.nefilim.mill.semver.domain.GitRef
 
 import java.io.File
 import scala.jdk.CollectionConverters.IterableHasAsScala

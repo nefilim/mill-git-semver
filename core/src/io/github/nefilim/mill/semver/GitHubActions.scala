@@ -1,4 +1,4 @@
-package org.nefilim.mill.semver
+package io.github.nefilim.mill.semver
 
 object GitHubActions {
   def githubActionsBuild(): Boolean = Option(System.getenv("GITHUB_ACTIONS")).contains("true")

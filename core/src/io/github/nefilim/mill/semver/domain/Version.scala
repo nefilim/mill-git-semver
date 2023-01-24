@@ -1,8 +1,8 @@
-package org.nefilim.mill.semver.domain
+package io.github.nefilim.mill.semver.domain
 
 import just.semver.AdditionalInfo
 import just.semver.AdditionalInfo.{BuildMetaInfo, PreRelease}
-import org.nefilim.mill.semver.VersionCalculatorError
+import io.github.nefilim.mill.semver.VersionCalculatorError
 
 object Version {
   case class PreReleaseLabel(label: String) extends AnyVal {

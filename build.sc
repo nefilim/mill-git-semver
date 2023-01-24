@@ -1,6 +1,9 @@
 import mill._
 import mill.scalalib._
 import mill.scalalib.publish._
+import $ivy.`io.chris-kipp::mill-ci-release::0.1.5`
+import io.kipp.mill.ci.release.CiReleaseModule
+import io.kipp.mill.ci.release.SonatypeHost
 
 object Versions {
   val EclipseJGit = "6.4.0.202211300538-r"
@@ -37,7 +40,7 @@ object Dependencies {
 val crossCompileDependencies = Seq(Dependencies.v0_10, Dependencies.v0_11)
 val millAPIVersions = crossCompileDependencies.groupBy(_.millPlatform)
 
-trait SemverPluginBaseModule extends CrossScalaModule with PublishModule {
+trait SemverPluginBaseModule extends CrossScalaModule with CiReleaseModule {
   def millAPIVersion: String
   def dependencies: MillPlatformDependencies = millAPIVersions.apply(millAPIVersion).head
   def crossScalaVersion = dependencies.scalaVersion
@@ -53,7 +56,8 @@ trait SemverPluginBaseModule extends CrossScalaModule with PublishModule {
     )
   }
 
-  def publishVersion = "0.0.3-SNAPSHOT"
+  override def sonatypeHost = Some(SonatypeHost.s01)
+
   override def versionScheme: T[Option[VersionScheme]] = T(Option(VersionScheme.EarlySemVer))
 
   override def javacOptions = Seq("-source", "1.8", "-target", "1.8", "-encoding", "UTF-8")

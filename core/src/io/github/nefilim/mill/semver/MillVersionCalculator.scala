@@ -1,4 +1,4 @@
-package org.nefilim.mill.semver
+package io.github.nefilim.mill.semver
 
 import just.semver.SemVer
 import just.semver.SemVer.render

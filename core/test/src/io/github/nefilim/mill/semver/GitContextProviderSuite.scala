@@ -1,6 +1,6 @@
-package org.nefilim.mill.semver
+package io.github.nefilim.mill.semver
 
-import org.nefilim.mill.semver.domain.GitRef
+import io.github.nefilim.mill.semver.domain.GitRef
 
 class GitContextProviderSuite extends munit.FunSuite {
   test("shortname") {
