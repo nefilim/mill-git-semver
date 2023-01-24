@@ -56,13 +56,12 @@ trait SemverPluginBaseModule extends CrossScalaModule with CiReleaseModule {
     )
   }
 
-  override def sonatypeHost = Some(SonatypeHost.s01)
-
   override def versionScheme: T[Option[VersionScheme]] = T(Option(VersionScheme.EarlySemVer))
 
   override def javacOptions = Seq("-source", "1.8", "-target", "1.8", "-encoding", "UTF-8")
   override def scalacOptions = Seq("-target:jvm-1.8", "-encoding", "UTF-8")
 
+  override def sonatypeHost = Some(SonatypeHost.s01)
   def pomSettings = T {
     PomSettings(
       description = "Mill plugin to derive a version from (last) git tag and edit state",
@@ -77,7 +76,7 @@ trait SemverPluginBaseModule extends CrossScalaModule with CiReleaseModule {
 
 object core extends Cross[CoreCross](millAPIVersions.keys.head)
 class CoreCross(override val millAPIVersion: String) extends SemverPluginBaseModule {
-  override def artifactName = "org.nefilim.mill.semver"
+  override def artifactName = "mill-git-semver"
 
   // don't generate IntelliJ configuration if ...
   override def skipIdea: Boolean = dependencies != crossCompileDependencies.head
