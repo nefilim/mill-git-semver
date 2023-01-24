@@ -122,13 +122,13 @@ object GitContextProvider {
       Right(newCommits.size)
     else if (newCommits.size != commits.size) {
       // find latest tag on this branch
-      logger.info("Unable to find the branch point [${branchPoint.id.name}: ${branchPoint.shortMessage}] typically happens when commits were squashed & merged and this branch [$branch] has not been rebased yet, using nearest commit with a semver tag, this is just a version estimation")
+      logger.info(s"Unable to find the branch point [${branchPoint.getId.name}: ${branchPoint.getShortMessage}] typically happens when commits were squashed & merged and this branch [$branch] has not been rebased yet, using nearest commit with a semver tag, this is just a version estimation")
       findYoungestTagCommitOnBranch(git, branch, tags) match {
         case None =>
-          logger.info("failed to find any semver tags on branch [$branch], does main have any version tags? using 0 as commit count since branch point")
+          logger.info(s"failed to find any semver tags on branch [$branch], does main have any version tags? using 0 as commit count since branch point")
           Right(0)
         case Some(youngestTag) =>
-          logger.info("youngest tag on this branch is at ${youngestTag.id.name} => ${tags[youngestTag.id]}")
+          logger.info(s"youngest tag on this branch is at ${youngestTag.getId.name} => ${tags(youngestTag.getId)}")
           Right(commits.takeWhile(_.getId != youngestTag.getId).size)
       }
     } else {

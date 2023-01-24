@@ -1,5 +1,6 @@
 package io.github.nefilim.mill.semver
 
+import io.github.nefilim.mill.semver.VersionCalculatorConfig.VersionCalculatorStrategy
 import just.semver.SemVer
 import just.semver.SemVer.render
 import mill.T
@@ -18,18 +19,17 @@ trait MillVersionCalculator extends Module {
     }
   )
 
+  def versionCalculatorStrategy(): VersionCalculatorStrategy = VersionCalculatorConfig.flatVersionCalculatorStrategy()
+
   def calculateVersion: Input[String] = T.input {
     implicit val logger: Logger = T.log
-    val config = VersionCalculatorConfig(VersionCalculatorConfig.flowVersionCalculatorStrategy())
+    val config = VersionCalculatorConfig(versionCalculatorStrategy())
     val ops = GitContextProvider.gitContextProviderOperations(git, config)
     // TODO add override version support
     ops.currentBranch().map { currentBranch =>
       val calculator = VersionCalculator.getTargetBranchVersionCalculator(ops, config, currentBranch)
       calculator.calculateVersion() match {
         case Left(e) =>
-          e match {
-            case VersionCalculatorError.Git(t) => t.printStackTrace()
-          }
           throw new Exception(s"failed to calculate version: $e")
         case Right(v) =>
           v

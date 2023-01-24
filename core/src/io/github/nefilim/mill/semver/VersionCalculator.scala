@@ -63,7 +63,7 @@ object VersionCalculator {
           Right(current)
         } { bmc =>
           logger.info(s"using BranchMatchingConfiguration: $bmc for versionQualifier() with currentBranch $currentBranch on current version ${current.render}")
-          val r = bmc.versionQualifier(contextProviderOperations, currentBranch)
+          val r = bmc.versionQualifier(contextProviderOperations, logger, currentBranch)
           for {
             pre <- r._1.toSemVerPreRelease()
             meta <- r._2.toSemVerBuildMetadataLabel()
@@ -113,25 +113,28 @@ case class VersionCalculatorConfig(
 }
 object VersionCalculatorConfig {
   type VersionModifier = SemVer => SemVer
-  type VersionQualifier = (ContextProviderOperations, Branch) => (PreReleaseLabel, BuildMetadataLabel)
+  type VersionQualifier = (ContextProviderOperations, Logger, Branch) => (PreReleaseLabel, BuildMetadataLabel)
   type VersionCalculatorStrategy = List[BranchMatchingConfiguration]
 
   val DefaultVersion = SemVer(SemVer.major0, SemVer.Minor(1), SemVer.patch0, None, None)
   val DefaultTagPrefix = "v"
 
-  def increaseMajor(): VersionModifier = { v => SemVer.increaseMajor(v)}
-  def increaseMinor(): VersionModifier = { v => SemVer.increaseMinor(v)}
-  def increasePatch(): VersionModifier = { v => SemVer.increasePatch(v)}
+  def increaseMajor(): VersionModifier = { v => SemVer.increaseMajor(v) }
 
-  def preReleaseWithCommitCount(
-    ops: ContextProviderOperations
+  def increaseMinor(): VersionModifier = { v => SemVer.increaseMinor(v) }
+
+  def increasePatch(): VersionModifier = { v => SemVer.increasePatch(v) }
+
+  private def preReleaseWithCommitCount(
+    ops: ContextProviderOperations,
+    logger: Logger,
   )(
     currentBranch: GitRef.Branch,
     targetBranch: GitRef.Branch,
     label: String
-  )(implicit logger: Logger): String = {
-    ops.commitsSinceBranchPoint(currentBranch, targetBranch).fold[String]({ _ =>
-      logger.info(s"Unable to calculate commits since branch point on current $currentBranch")
+  ): String = {
+    ops.commitsSinceBranchPoint(currentBranch, targetBranch)(logger).fold[String]({ _ =>
+      println(s"Unable to calculate commits since branch point on current $currentBranch")
       label
     }, { v =>
       s"$label.$v"
@@ -140,32 +143,48 @@ object VersionCalculatorConfig {
 
   def flowVersionCalculatorStrategy(
     versionModifier: VersionModifier = increasePatch()
-  )(implicit logger: Logger) = List(
+  ) = List(
     BranchMatchingConfiguration(
       """^main$""".r,
       GitRef.Branch.Main,
-      { (c, b) => (PreReleaseLabel.empty, BuildMetadataLabel.empty) },
+      { (ops, l, b) => (PreReleaseLabel.empty, BuildMetadataLabel.empty) },
       versionModifier
     ),
     BranchMatchingConfiguration(
       """^develop$""".r,
       GitRef.Branch.Main,
-      { (ops, b) => (PreReleaseLabel(preReleaseWithCommitCount(ops)(b, GitRef.Branch.Main, "beta")), BuildMetadataLabel.empty) },
+      { (ops, l, b) => (PreReleaseLabel(preReleaseWithCommitCount(ops, l)(b, GitRef.Branch.Main, "beta")), BuildMetadataLabel.empty) },
       versionModifier
     ),
     BranchMatchingConfiguration(
       """^feature/.*""".r,
       GitRef.Branch.Develop,
-      { (ops, b) => (PreReleaseLabel(preReleaseWithCommitCount(ops)(b, GitRef.Branch.Main, b.sanitizedNameWithoutPrefix())), BuildMetadataLabel.empty) },
+      { (ops, l, b) => (PreReleaseLabel(preReleaseWithCommitCount(ops, l)(b, GitRef.Branch.Main, b.sanitizedNameWithoutPrefix())), BuildMetadataLabel.empty) },
       versionModifier
     ),
     BranchMatchingConfiguration(
       """^hotfix/.*""".r,
       GitRef.Branch.Main,
-      { (ops, b) => (PreReleaseLabel(preReleaseWithCommitCount(ops)(b, GitRef.Branch.Main, "rc")), BuildMetadataLabel.empty) },
+      { (ops, l, b) => (PreReleaseLabel(preReleaseWithCommitCount(ops, l)(b, GitRef.Branch.Main, "rc")), BuildMetadataLabel.empty) },
       versionModifier
     ),
   )
 
+  def flatVersionCalculatorStrategy(
+    versionModifier: VersionModifier = increasePatch()
+  ) = List(
+    BranchMatchingConfiguration(
+      """^main$""".r,
+      GitRef.Branch.Main,
+      { (_, _, _) => (PreReleaseLabel.empty, BuildMetadataLabel.empty) },
+      versionModifier
+    ),
+    BranchMatchingConfiguration(
+      """.*""".r,
+      GitRef.Branch.Main,
+      { (ops, l, b) => (PreReleaseLabel(preReleaseWithCommitCount(ops, l)(b, GitRef.Branch.Main, b.sanitizedNameWithoutPrefix())), BuildMetadataLabel.empty) },
+      versionModifier
+    ),
+  )
 }
 

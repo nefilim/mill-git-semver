@@ -4,7 +4,6 @@ import io.github.nefilim.mill.semver.domain.GitRef
 
 class GitContextProviderSuite extends munit.FunSuite {
   test("shortname") {
-    println(GitRef.RemoteOrigin)
     assertEquals(GitRef.RefHead, "refs/heads")
     assertEquals(GitRef.RefRemote, "refs/remotes")
     assertEquals(GitRef.RefTags, "refs/tags")
