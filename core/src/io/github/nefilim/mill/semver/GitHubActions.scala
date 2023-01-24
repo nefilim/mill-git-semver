@@ -7,3 +7,10 @@ object GitHubActions {
 
   def pullRequestHeadRef(): Option[String] = Option(System.getenv("GITHUB_HEAD_REF"))
 }
+
+object Jenkins {
+  def jenkinsBuild(): Boolean =
+    Option(System.getenv("JENKINS_URL")).isDefined && Option(System.getenv("BUILD_ID")).isDefined
+
+  def jenkinsBranchShortName(): Option[String] = Option(System.getenv("BRANCH_NAME"))
+}

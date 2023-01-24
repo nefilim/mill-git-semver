@@ -77,7 +77,9 @@ object GitContextProvider {
   }
 
   private[semver] def currentBranchRef(git: Git): Option[String] = {
-    if (githubActionsBuild() && pullRequestEvent()) {
+    if (Jenkins.jenkinsBuild())
+      Jenkins.jenkinsBranchShortName()
+    else if (githubActionsBuild() && pullRequestEvent()) {
       pullRequestHeadRef().map { r =>
         s"${GitRef.RemoteOrigin}/$r"
       } // why does GITHUB_HEAD_REF not refer to a ref like GITHUB_REF???

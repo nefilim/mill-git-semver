@@ -23,9 +23,7 @@ trait MillVersionCalculator extends Module {
     val config = VersionCalculatorConfig(VersionCalculatorConfig.flowVersionCalculatorStrategy())
     val ops = GitContextProvider.gitContextProviderOperations(git, config)
     // TODO add override version support
-    logger.info("checking for current branch")
     ops.currentBranch().map { currentBranch =>
-      println(s"current brnach: $currentBranch")
       val calculator = VersionCalculator.getTargetBranchVersionCalculator(ops, config, currentBranch)
       calculator.calculateVersion() match {
         case Left(e) =>
