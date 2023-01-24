@@ -66,7 +66,7 @@ trait SemverPluginBaseModule extends CrossScalaModule with CiReleaseModule {
   def pomSettings = T {
     PomSettings(
       description = "Mill plugin to derive a version from (last) git tag and edit state",
-      organization = "org.nefilim.mill",
+      organization = "io.github.nefilim",
       url = "https://github.com/nefilim/mill-git-semver",
       licenses = Seq(License.`Apache-2.0`),
       versionControl = VersionControl.github("nefilim", "mill-git-semver"),
