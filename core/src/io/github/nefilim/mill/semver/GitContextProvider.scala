@@ -121,7 +121,7 @@ object GitContextProvider {
   )(implicit logger: Logger): Either[VersionCalculatorError, Int] = {
     logger.debug(s"finding commits on branch [$branch] since branch point [${branchPoint}]")
     // can this blow up for large repos?
-    val allCommitsOnThisBranch = git.log().add(git.getRepository.resolve(branch.refName)).call().asScala.toList.sortBy(-1 * _.getCommitTime) // .toList is CRITICAL here otherwise a mutable structure is returned that is emptied before you know it!
+    val allCommitsOnThisBranch = git.log().call().asScala.toList.sortBy(-1 * _.getCommitTime) // .toList is CRITICAL here otherwise a mutable structure is returned that is emptied before you know it!
     logger.debug(s"all commits: ${allCommitsOnThisBranch.mkString("\n")}")
     val newCommitsSinceBranchPoint: List[RevCommit] = allCommitsOnThisBranch.takeWhile { c =>
       c.toObjectId != branchPoint.toObjectId && c.getCommitTime > branchPoint.getCommitTime
