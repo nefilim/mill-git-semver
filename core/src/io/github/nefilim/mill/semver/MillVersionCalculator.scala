@@ -5,10 +5,10 @@ import just.semver.SemVer
 import just.semver.SemVer.render
 import mill.T
 import mill.api.Logger
-import mill.define.{Discover, ExternalModule, Input, Module}
+import mill.define.{Input, Module}
 import upickle.default._
 
-trait MillVersionCalculator extends Module {
+trait VersionCalculatorModule extends Module {
   val git = GitContextProvider.gitRepo(".")
 
   implicit val jsonify: upickle.default.ReadWriter[SemVer] = readwriter[ujson.Value].bimap[SemVer](
@@ -25,6 +25,7 @@ trait MillVersionCalculator extends Module {
     implicit val logger: Logger = T.log
     val config = VersionCalculatorConfig(versionCalculatorStrategy())
     val ops = GitContextProvider.gitContextProviderOperations(git, config)
+    val head = git.getRepository.resolve(org.eclipse.jgit.lib.Constants.HEAD)
     // TODO add override version support
     ops.currentBranch().map { currentBranch =>
       val calculator = VersionCalculator.getTargetBranchVersionCalculator(ops, config, currentBranch)
@@ -42,9 +43,4 @@ trait MillVersionCalculator extends Module {
         v.render
     }
   }
-}
-
-object MillVersionCalculator extends ExternalModule with MillVersionCalculator {
-  lazy val millDiscover: Discover[MillVersionCalculator.this.type] = Discover[this.type]
-  implicit def millScoptEvaluatorReads[T] = new mill.main.EvaluatorScopt[T]()
 }

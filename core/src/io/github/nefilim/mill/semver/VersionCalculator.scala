@@ -34,7 +34,7 @@ object VersionCalculator {
           logger.info(s"no match found for $currentBranch in ${config.strategy}, using initial version as previous version")
           Left(VersionCalculatorError.MissingBranchMatchingConfiguration(currentBranch))
         } { bmc =>
-          logger.info(s"using BranchMatchingConfiguration: $bmc for previousVersion() with currentBranch $currentBranch")
+          logger.debug(s"using BranchMatchingConfiguration: $bmc for previousVersion() with currentBranch $currentBranch")
           contextProviderOperations.branchVersion(currentBranch, bmc.targetBranch).map { v =>
             logger.info(s"branch version for current $currentBranch and target ${bmc.targetBranch}: $v")
             v.getOrElse {
@@ -51,7 +51,7 @@ object VersionCalculator {
           logger.info(s"no match found for $currentBranch in ${config.strategy}, using initial version as modified version")
           config.initialVersion
         } { bmc =>
-            logger.info(s"using BranchMatchingConfiguration: $bmc for versionModifier() with currentBranch $currentBranch on current version ${current.render}")
+            logger.debug(s"using BranchMatchingConfiguration: $bmc for versionModifier() with currentBranch $currentBranch on current version ${current.render}")
             bmc.versionModifier(current)
         }
     }
@@ -62,7 +62,7 @@ object VersionCalculator {
           logger.info(s"no match found for $currentBranch in ${config.strategy}")
           Right(current)
         } { bmc =>
-          logger.info(s"using BranchMatchingConfiguration: $bmc for versionQualifier() with currentBranch $currentBranch on current version ${current.render}")
+          logger.debug(s"using BranchMatchingConfiguration: $bmc for versionQualifier() with currentBranch $currentBranch on current version ${current.render}")
           val r = bmc.versionQualifier(contextProviderOperations, logger, currentBranch)
           for {
             pre <- r._1.toSemVerPreRelease()
@@ -134,7 +134,7 @@ object VersionCalculatorConfig {
     label: String
   ): String = {
     ops.commitsSinceBranchPoint(currentBranch, targetBranch)(logger).fold[String]({ _ =>
-      println(s"Unable to calculate commits since branch point on current $currentBranch")
+      logger.info(s"Unable to calculate commits since branch point on current $currentBranch")
       label
     }, { v =>
       s"$label.$v"
