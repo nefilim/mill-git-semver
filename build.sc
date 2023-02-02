@@ -1,9 +1,13 @@
 import mill._
+import mill.define.Target
 import mill.scalalib._
 import mill.scalalib.publish._
+import $ivy.`de.tototec::de.tobiasroeser.mill.integrationtest::0.6.1`
+import de.tobiasroeser.mill.integrationtest._
 import $ivy.`io.chris-kipp::mill-ci-release::0.1.5`
 import io.kipp.mill.ci.release.CiReleaseModule
 import io.kipp.mill.ci.release.SonatypeHost
+import os.Path
 
 object Versions {
   val EclipseJGit = "6.4.0.202211300538-r"
@@ -27,7 +31,7 @@ trait MillPlatformDependencies {
 object Dependencies {
   object v0_11 extends MillPlatformDependencies {
     override def millPlatform = millVersion // only valid for exact milestones!
-    override def millVersion = "0.11.0-M2"
+    override def millVersion = "0.11.0-M3"
     override def scalaVersion = "2.13.10"
   }
 
@@ -74,7 +78,7 @@ trait SemverPluginBaseModule extends CrossScalaModule with CiReleaseModule {
   }
 }
 
-object core extends Cross[CoreCross](millAPIVersions.keys.head)
+object core extends Cross[CoreCross](millAPIVersions.keys.toSeq: _*)
 class CoreCross(override val millAPIVersion: String) extends SemverPluginBaseModule {
   override def artifactName = "mill-git-semver"
 
@@ -93,4 +97,21 @@ class CoreCross(override val millAPIVersion: String) extends SemverPluginBaseMod
   }
 }
 
+val millIntegrationTestVersions = Seq("0.10.10")
+object integrationTest extends Cross[IntegrationTestCross](millIntegrationTestVersions: _*)
+class IntegrationTestCross(millIntegrationTestVersion: String) extends MillIntegrationTestModule {
+  val millApiVersion = millIntegrationTestVersion.split("[.]").take(2).mkString(".")
 
+  override def millSourcePath: Path = super.millSourcePath / os.up // otherwise it expects a separate source tree per version
+  override def millTestVersion = millIntegrationTestVersion
+  override def pluginsUnderTest = Seq(core(millApiVersion))
+
+  val testcaseCount = testCases.map(s => s.length)
+
+  override def testInvocations: Target[Seq[(PathRef, Seq[TestInvocation.Targets])]] = T {
+    testCases().map { pathref =>
+      T.log.info(s"building invocations, path: $pathref")
+      pathref -> Seq(TestInvocation.Targets(Seq("-d", "verify")))
+    }
+  }
+}

@@ -1,22 +1,38 @@
 package io.github.nefilim.mill.semver
 
+import io.github.nefilim.mill.semver.GitHubActions.{githubActionsBuild, pullRequestEvent, pullRequestHeadRef}
+import io.github.nefilim.mill.semver.GitTargetBranchVersionCalculator.GitVersionCalculatorConfig
+import io.github.nefilim.mill.semver.domain.GitRef
 import just.semver.SemVer
 import mill.api.Logger
 import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.lib.{Constants, ObjectId, Ref}
+import org.eclipse.jgit.lib.{ObjectId, Ref}
 import org.eclipse.jgit.revwalk.{RevCommit, RevWalk}
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
-import io.github.nefilim.mill.semver.GitHubActions.{githubActionsBuild, pullRequestEvent, pullRequestHeadRef}
-import io.github.nefilim.mill.semver.domain.GitRef
 
 import java.io.File
 import scala.jdk.CollectionConverters.IterableHasAsScala
 import scala.util.{Failure, Success, Try, Using}
 
-object GitContextProvider {
+
+trait ContextProviderOperations {
+  def currentBranch()(implicit logger: Logger): Option[GitRef.Branch]
+
+  def branchVersion(
+    currentBranch: GitRef.Branch,
+    targetBranch: GitRef.Branch
+  )(implicit logger: Logger): Either[VersionCalculatorError, Option[SemVer]]
+
+  def commitsSinceBranchPoint(
+    currentBranch: GitRef.Branch,
+    targetBranch: GitRef.Branch
+  )(implicit logger: Logger): Either[VersionCalculatorError, Int]
+}
+
+object ContextProviderOperations {
   type Tags = Map[ObjectId, SemVer]
 
-  def gitRepo(path: String): Git = {
+  def gitRepo(): Git = {
     val currentDir = new File("./.git")
     println(currentDir.getCanonicalPath)
     new Git(
@@ -30,7 +46,7 @@ object GitContextProvider {
 
   def gitContextProviderOperations(
     git: Git,
-    config: VersionCalculatorConfig,
+    config: GitVersionCalculatorConfig,
   )(implicit logger: Logger): ContextProviderOperations = {
     new ContextProviderOperations {
       private val tags = tagMap(git, config.tagPrefix)
@@ -101,12 +117,12 @@ object GitContextProvider {
       case Some(n) if n.startsWith(GitRef.RefHead) =>
         Try(n.stripPrefix(GitRef.RefHead + "/")) match {
           case Success(v) => Right(v)
-          case Failure(e) => Left(VersionCalculatorError.Git(e))
+          case Failure(e) => Left(GitTargetBranchVersionCalculator.Error.Git(e))
         }
       case Some(n) if n.startsWith(GitRef.RemoteOrigin) =>
         Try(n.stripPrefix(GitRef.RemoteOrigin + "/")) match {
           case Success(v) => Right(v)
-          case Failure(e) => Left(VersionCalculatorError.Git(e))
+          case Failure(e) => Left(GitTargetBranchVersionCalculator.Error.Git(e))
         }
       case Some(n) => Right(n)
       case _ => Left(VersionCalculatorError.Unexpected("unable to parse branch Ref: [$it]"))
@@ -179,7 +195,7 @@ object GitContextProvider {
     if (git.getRepository.findRef(branch.refName) == null) { // probably in detached head state in jenkins
       Try(git.log().setMaxCount(1).call().asScala.toList.head) match {
         case Success(v) => Right(v)
-        case Failure(e) => Left(VersionCalculatorError.Git(e))
+        case Failure(e) => Left(GitTargetBranchVersionCalculator.Error.Git(e))
       }
     } else
       Using(new RevWalk(git.getRepository)) { walk =>
@@ -188,7 +204,7 @@ object GitContextProvider {
         revCommit
       } match {
         case Success(v) => Right(v)
-        case Failure(e) => Left(VersionCalculatorError.Git(e))
+        case Failure(e) => Left(GitTargetBranchVersionCalculator.Error.Git(e))
       }
   }
 
@@ -200,7 +216,7 @@ object GitContextProvider {
   )(implicit logger: Logger): Option[SemVer] = {
     Option(git.getRepository.exactRef(branch.refName)) match {
       case None =>
-        logger.debug(s"failed to find exact git ref for branch [$branch], aborting...")
+        logger.info(s"failed to find exact git ref for branch [$branch], returning None...")
         None
       case Some(branchRef) =>
         logger.debug(s"pulling log for $branch refName, exactRef: ${branchRef}, target: $target")
