@@ -11,9 +11,18 @@ import upickle.default._
 
 trait VersionCalculatorModule extends Module {
   val initialVersion: String = "0.0.1"
-  val overrideVersion: Option[String] = None
+  val overrideVersion: Option[String] = Option(System.getProperty("semver.override", null))
+  val versionFileName: String = "release.txt"
 
   def calculateVersion: Input[String]
+
+  def writeVersionFile() = T.command {
+    val calculatedVersion = calculateVersion()
+
+    val releaseFile = new java.io.PrintWriter(new java.io.File(versionFileName))
+    releaseFile.println(calculatedVersion)
+    releaseFile.close()
+  }
 }
 
 trait GitSemVerVersionCalculatorModule extends VersionCalculatorModule {
