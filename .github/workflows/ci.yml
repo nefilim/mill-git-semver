@@ -1,4 +1,4 @@
-name: ci
+name: CI
 
 on:
   push:
@@ -27,6 +27,6 @@ jobs:
         distribution: 'zulu'
         java-version: ${{ matrix.java }}
 
-    - name: Compile
+    - name: Test
       run:
-        ./millw -d --no-server __.test
+        ./millw __.test

@@ -30,10 +30,10 @@ object GitRef {
   object Branch {
     def apply(name: String) = new Branch(name, s"$RefHead/$name")
 
-//    val Main = Branch("main", s"$RemoteOrigin/main")
     val Main = Branch("main", s"$RefHead/main")
-    val Master = Branch("master", s"$RemoteOrigin/master")
-//    val Develop = Branch("develop", s"$RemoteOrigin/develop")
+    val Master = Branch("master", s"$RefHead/master")
     val Develop = Branch("develop", s"$RefHead/develop")
+    //    val Main = Branch("main", s"$RemoteOrigin/main")
+    //    val Develop = Branch("develop", s"$RemoteOrigin/develop")
   }
 }

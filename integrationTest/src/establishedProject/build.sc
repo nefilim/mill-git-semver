@@ -20,6 +20,7 @@ def initGit: T[Unit] = T {
   if (!os.exists(baseDir / ".git")) {
     T.log.info("Initializing git repo...")
       Seq(
+        os.proc("git", "config", "--global", "init.defaultBranch", "main"),
         os.proc("git", "init"),
         os.proc("git", "config", "user.email", "test@test.com"),
         os.proc("git", "config", "user.name", "Mill CI"),
