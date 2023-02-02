@@ -98,7 +98,7 @@ object GitTargetBranchVersionCalculator {
     regex: Regex,
     targetBranch: GitRef.Branch,
     versionQualifier: VersionQualifier[SemVer, Context],
-    versionModifier: VersionModifier[SemVer] = GitSemVer.IncreasePatch
+    versionModifier: VersionModifier[SemVer],
   ) {
     override def toString: String =
       s"""
@@ -126,7 +126,7 @@ object GitTargetBranchVersionCalculator {
   }
 
   def flowVersionCalculatorStrategy(
-    versionModifier: VersionModifier[SemVer] = GitSemVer.IncreasePatch
+    versionModifier: VersionModifier[SemVer]
   ): VersionCalculatorStrategy = List(
     BranchMatchingConfiguration(
       """^main$""".r,
@@ -155,7 +155,7 @@ object GitTargetBranchVersionCalculator {
   )
 
   def flatVersionCalculatorStrategy(
-    versionModifier: VersionModifier[SemVer] = GitSemVer.IncreasePatch
+    versionModifier: VersionModifier[SemVer]
   ): VersionCalculatorStrategy = List(
     BranchMatchingConfiguration(
       """^main$""".r,

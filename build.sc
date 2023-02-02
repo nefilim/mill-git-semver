@@ -110,8 +110,12 @@ class IntegrationTestCross(millIntegrationTestVersion: String) extends MillInteg
 
   override def testInvocations: Target[Seq[(PathRef, Seq[TestInvocation.Targets])]] = T {
     testCases().map { pathref =>
-      T.log.info(s"building invocations, path: $pathref")
-      pathref -> Seq(TestInvocation.Targets(Seq("-d", "verify")))
+      pathref.path.last match {
+        case "establishedProject" =>
+          pathref -> Seq(TestInvocation.Targets(Seq("-d", "-D", "semver.modifier=minor", "verify")))
+        case _ =>
+          pathref -> Seq(TestInvocation.Targets(Seq("-d", "verify")))
+      }
     }
   }
 }

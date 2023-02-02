@@ -1,6 +1,6 @@
 package io.github.nefilim.mill.semver
 
-import io.github.nefilim.mill.semver.GitTargetBranchVersionCalculator.{GitVersionCalculatorConfig, VersionCalculatorStrategy}
+import io.github.nefilim.mill.semver.GitTargetBranchVersionCalculator.{GitVersionCalculatorConfig, VersionCalculatorStrategy, flowVersionCalculatorStrategy}
 import just.semver.SemVer
 import just.semver.SemVer.render
 import mill.T
@@ -27,8 +27,15 @@ trait GitSemVerVersionCalculatorModule extends VersionCalculatorModule {
     }
   )
 
-  def versionCalculatorStrategy(): VersionCalculatorStrategy =
-    GitTargetBranchVersionCalculator.flatVersionCalculatorStrategy()
+  def versionCalculatorStrategy(): VersionCalculatorStrategy = flowVersionCalculatorStrategy()
+
+  def flatVersionCalculatorStrategy() =
+    GitTargetBranchVersionCalculator.flatVersionCalculatorStrategy(SemVerVersionModifier.fromID(modifier))
+
+  def flowVersionCalculatorStrategy() =
+    GitTargetBranchVersionCalculator.flowVersionCalculatorStrategy(SemVerVersionModifier.fromID(modifier))
+
+  def modifier: String = System.getProperty("semver.modifier", SemVerVersionModifier.IncreasePatch.id)
 
   val tagPrefix: String = "v"
 

@@ -5,20 +5,28 @@ import io.github.nefilim.mill.semver.GitTargetBranchVersionCalculator.{Context, 
 import just.semver.SemVer._
 import just.semver.{AdditionalInfo, SemVer}
 
-object GitSemVer {
-  val DefaultVersion = SemVer(SemVer.major0, SemVer.Minor(1), SemVer.patch0, None, None)
+sealed abstract class SemVerVersionModifier(val id: String) extends VersionModifier[SemVer]
 
-  object IncreaseMajor extends VersionModifier[SemVer]  {
-    override def modifyVersion(version: SemVer): SemVer = increaseMajor(version)
+object SemVerVersionModifier {
+  case object IncreaseMajor extends SemVerVersionModifier("major") {
+    override def modifyVersion(version: SemVer): SemVer = increaseMajor(version).copy(minor = minor0, patch = patch0)
   }
-
-  object IncreaseMinor extends VersionModifier[SemVer] {
-    override def modifyVersion(version: SemVer): SemVer = increaseMinor(version)
+  case object IncreaseMinor extends SemVerVersionModifier("minor") {
+    override def modifyVersion(version: SemVer): SemVer = increaseMinor(version).copy(patch = patch0)
   }
-
-  object IncreasePatch extends VersionModifier[SemVer] {
+  case object IncreasePatch extends SemVerVersionModifier("patch") {
     override def modifyVersion(version: SemVer): SemVer = increasePatch(version)
   }
+  def fromID(id: String) = id.trim.toLowerCase match {
+    case IncreaseMajor.id => IncreaseMajor
+    case IncreaseMinor.id => IncreaseMinor
+    case IncreasePatch.id => IncreasePatch
+    case _ => throw new IllegalArgumentException(s"unknown version modifier: [${id}]")
+  }
+}
+
+object GitSemVer {
+  val DefaultVersion = SemVer(SemVer.major0, SemVer.Minor(1), SemVer.patch0, None, None)
 
   object Qualifiers {
     object Empty extends VersionQualifier[SemVer, Context] {
