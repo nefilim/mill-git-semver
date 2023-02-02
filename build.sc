@@ -37,7 +37,7 @@ object Dependencies {
 
   object v0_10 extends MillPlatformDependencies {
     override def millPlatform = "0.10"
-    override def millVersion = "0.10.10" // scala-steward:off
+    override def millVersion = "0.10.11" // scala-steward:off
     override def scalaVersion = "2.13.10"
   }
 }
@@ -97,16 +97,15 @@ class CoreCross(override val millAPIVersion: String) extends SemverPluginBaseMod
   }
 }
 
-val millIntegrationTestVersions = Seq("0.10.10")
-object integrationTest extends Cross[IntegrationTestCross](millIntegrationTestVersions: _*)
-class IntegrationTestCross(millIntegrationTestVersion: String) extends MillIntegrationTestModule {
-  val millApiVersion = millIntegrationTestVersion.split("[.]").take(2).mkString(".")
+val millIntegrationTestVersions = crossCompileDependencies.groupBy(d => d.millVersion)
+println(s"cases: ${millIntegrationTestVersions}")
+object integrationTest extends Cross[IntegrationTestCross](millIntegrationTestVersions.keys.toSeq: _*)
+class IntegrationTestCross(millVersion: String) extends MillIntegrationTestModule {
+  val millAPIVersion = millIntegrationTestVersions(millVersion).head.millPlatform
 
   override def millSourcePath: Path = super.millSourcePath / os.up // otherwise it expects a separate source tree per version
-  override def millTestVersion = millIntegrationTestVersion
-  override def pluginsUnderTest = Seq(core(millApiVersion))
-
-  val testcaseCount = testCases.map(s => s.length)
+  override def millTestVersion = millVersion
+  override def pluginsUnderTest = Seq(core(millAPIVersion))
 
   override def testInvocations: Target[Seq[(PathRef, Seq[TestInvocation.Targets])]] = T {
     testCases().map { pathref =>

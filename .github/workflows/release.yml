@@ -1,9 +1,7 @@
 name: Release
 on:
   push:
-    branches:
-      - main
-    tags: ["*"]
+    tags: ["v*"]
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -11,11 +9,12 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+      - uses: coursier/cache-action@v6
       - uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
           java-version: '11'
-      - run: ./millw -i io.kipp.mill.ci.release.ReleaseModule/publishAll
+      - run: ./millw io.kipp.mill.ci.release.ReleaseModule/publishAll
         env:
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
